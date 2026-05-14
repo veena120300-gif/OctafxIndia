@@ -1,0 +1,90 @@
+﻿@model OctafxIndia.ViewModels.EditTradingAccountViewModel
+
+@{
+    ViewData["Title"] = "Edit Trading Account";
+}
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">@ViewData["Title"]</h5>
+                    <a asp-controller="Home" asp-action="AfterLogin" class="btn btn-sm btn-outline-primary">View Public Page</a>
+                </div>
+
+                <div class="card-body">
+                    <form asp-action="SaveTradingAccount" method="post" novalidate>
+                        @Html.AntiForgeryToken()
+
+                        <div class="mb-3">
+                            <label asp-for="AccountNumber" class="form-label"></label>
+                            <input asp-for="AccountNumber" class="form-control" />
+                            <span asp-validation-for="AccountNumber" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="AccountName" class="form-label"></label>
+                            <input asp-for="AccountName" class="form-control" />
+                            <span asp-validation-for="AccountName" class="text-danger"></span>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label asp-for="Balance" class="form-label"></label>
+                                <input asp-for="Balance" class="form-control" />
+                                <span asp-validation-for="Balance" class="text-danger"></span>
+                            </div>
+
+                            <div class="col-md-4 mb-3">
+                                <label asp-for="FreeMargin" class="form-label"></label>
+                                <input asp-for="FreeMargin" class="form-control" />
+                                <span asp-validation-for="FreeMargin" class="text-danger"></span>
+                            </div>
+
+                            <div class="col-md-4 mb-3">
+                                <label asp-for="Equity" class="form-label"></label>
+                                <input asp-for="Equity" class="form-control" />
+                                <span asp-validation-for="Equity" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Leverage" class="form-label"></label>
+                            <input asp-for="Leverage" class="form-control" />
+                            <span asp-validation-for="Leverage" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Server" class="form-label"></label>
+                            <input asp-for="Server" class="form-control" />
+                            <span asp-validation-for="Server" class="text-danger"></span>
+                        </div>
+
+                        <div class="form-check mb-3">
+                            <input asp-for="NoSwap" class="form-check-input" />
+                            <label asp-for="NoSwap" class="form-check-label"></label>
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary">Save</button>
+                            <a asp-action="Index" asp-controller="Admin" class="btn btn-secondary">Cancel</a>
+                        </div>
+                    </form>
+                </div> <!-- card-body -->
+
+                <div class="card-footer text-muted small">
+                    Only users in the <strong>Admin</strong> role (and matching the configured admin email in controller if used) can access this page.
+                </div>
+            </div> <!-- card -->
+        </div> <!-- col -->
+    </div> <!-- row -->
+</div> <!-- container -->
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

@@ -1,0 +1,430 @@
+﻿:root {
+    --accent: #0b6cff;
+    --dark: #0b2340;
+    --muted: #6b7a90;
+}
+
+/* Reset / base */
+* {
+    box-sizing: border-box;
+}
+
+html, body {
+    font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+    font-family: 'Inter', Arial, sans-serif;
+}
+
+/* Header */
+header {
+    display: flex;
+    align-items: center;
+    justify-content: right;
+    padding: 12px 15px;
+    background: #f4f8ff;
+    border-bottom: 1px solid #e1e9ff;
+    margin-right: 722px;
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+    .logo .mark {
+        width: 28px;
+        height: 29px;
+        border-radius: 8px;
+        background: var(--accent);
+        display: grid;
+        place-items: center;
+        color: white;
+        font-weight: 700;
+    }
+
+/* NAV LINKS (styled as soft pills) */
+nav a {
+    display: inline-block;
+    padding: 10px 20px;
+    margin-left: 18px;
+    background-color: #f4f8ff;
+    border-radius: 12px;
+    color: #111;
+    text-decoration: none;
+    font-size: 16px;
+    font-weight: 300;
+    transition: background-color 0.18s ease, color 0.18s ease;
+}
+
+    nav a:hover {
+        background-color: #e5e5e5;
+        color: #000;
+    }
+
+/* ---------- additional styles (appended) ---------- */
+/* Use these for the fixed topbar; either:
+   - add class="topbar" to your <header> OR
+   - add class="afterlogin" to <body> so rules for .afterlogin header apply
+*/
+
+/* small variables for the topbar and left-panel spacing */
+:root {
+    --left-panel-width: 96px; /* adjust to match your left panel width */
+    --topbar-height: 64px;
+    --page-max-width: 1200px;
+}
+
+/* Ensure the page content is not hidden under a fixed header when using .topbar */
+body.afterlogin {
+    padding-top: var(--topbar-height);
+}
+
+/* If you add class="topbar" to your existing header, the following will apply */
+header.topbar,
+.afterlogin header {
+    position: fixed;
+    top: 0;
+    left: var(--left-panel-width);
+    right: 0;
+    height: var(--topbar-height);
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 12px 20px;
+    background: #f4f8ff;
+    border-bottom: 1px solid #e1e9ff;
+    z-index: 1000;
+    box-sizing: border-box;
+    /* override any margin-right from the original header safely */
+    margin-right: 50px;
+    margin-left: -86px;
+}
+
+    /* If you prefer to keep the plain <header> without adding classes,
+   these more-specific rules will not conflict with your original header rules.
+   But adding class="topbar" or class="afterlogin" is recommended. */
+
+    /* Keep logo alignment consistent */
+    header.topbar .logo,
+    .afterlogin header .logo {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+        /* If you want to use your uploaded image as the logo mark, replace background coloring
+   or also supply an <img> inside .mark. Using background-image here (local path): */
+        header.topbar .logo .mark,
+        .afterlogin header .logo .mark {
+            background-image: url('/mnt/data/7f7846b7-571c-4075-a591-47a7760dab63.png');
+            background-size: cover;
+            background-position: center;
+            color: transparent; /* hide text if image used */
+        }
+
+    /* Topbar layout helpers (non-destructive) */
+    .topbar-nav,
+    .afterlogin header nav {
+        margin-left: 30px;
+        display: flex;
+        gap: 12px;
+        align-items: center;
+    }
+
+/* Right side group (deposit + avatar + menu). Add a wrapper in HTML or rely on .topbar-right */
+.topbar-right {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+/* Deposit button style (use .btn.deposit on the button element) */
+.btn.deposit {
+    background: var(--accent);
+    color: white;
+    border: none;
+    padding: 10px 18px;
+    border-radius: 10px;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(11,108,255,0.12);
+}
+
+/* Avatar and presence indicator */
+.avatar-wrap {
+    position: relative;
+    width: 36px;
+    height: 36px;
+}
+
+.avatar {
+    width: 100%;
+    height: 100%;
+    border-radius: 8px;
+    object-fit: cover;
+    border: 2px solid #fff;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+}
+
+/* small orange presence dot */
+.avatar-badge {
+    position: absolute;
+    right: -2px;
+    top: -2px;
+    width: 10px;
+    height: 10px;
+    background: #ffb84d;
+    border-radius: 50%;
+    border: 2px solid #fff;
+}
+
+/* Menu button */
+.menu-btn {
+    background: #f3f4f6;
+    border: none;
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+    /* small icon inside menu button */
+    .menu-btn .menu-icon {
+        font-size: 18px;
+    }
+
+/* Make the nav hide on small screens if desired */
+@media (max-width: 900px) {
+    header.topbar nav,
+    .afterlogin header nav {
+        display: none;
+    }
+}
+/* Right panel slide-over (desktop) */
+.right-panel {
+    position: fixed;
+    top: var(--topbar-height, 64px); /* below the fixed header */
+    right: 12px;
+    width: 340px;
+    max-width: calc(100% - 120px);
+    height: calc(100% - var(--topbar-height, 64px) - 24px);
+    background: white;
+    box-shadow: 0 12px 40px rgba(2,6,23,0.12);
+    border-radius: 12px;
+    transform: translateX(12px) scale(0.98);
+    opacity: 0;
+    pointer-events: none;
+    transition: transform .18s ease, opacity .18s ease;
+    z-index: 1500;
+    overflow: hidden;
+}
+
+    /* when open */
+    .right-panel.open {
+        transform: translateX(0) scale(1);
+        opacity: 1;
+        pointer-events: auto;
+    }
+
+/* inner layout */
+.right-panel-inner {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+/* header row inside panel */
+.panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 16px;
+    border-bottom: 1px solid #f1f3f6;
+    gap: 8px;
+}
+
+    .panel-header .deposit.small {
+        padding: 8px 12px;
+        border-radius: 8px;
+        font-size: 14px;
+    }
+
+.panel-avatar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+    .panel-avatar img {
+        width: 44px;
+        height: 44px;
+        border-radius: 8px;
+        object-fit: cover;
+        border: 2px solid #fff;
+    }
+
+/* close X */
+.close-x {
+    background: #f3f4f6;
+    border: none;
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    margin-left: 6px;
+    cursor: pointer;
+}
+
+/* body */
+.panel-body {
+    padding: 16px;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* status card */
+.status-card {
+    background: #fff6f0;
+    border-radius: 12px;
+    padding: 14px;
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    margin-bottom: 16px;
+    box-shadow: 0 1px 0 rgba(0,0,0,0.02) inset;
+}
+
+.status-icon {
+    font-size: 22px;
+}
+
+.status-text {
+    flex: 1;
+    font-size: 14px;
+    color: var(--dark, #0b2340);
+}
+
+    .status-text .xp {
+        color: var(--muted, #6b7a90);
+        font-size: 13px;
+        margin-top: 6px;
+    }
+
+.status-days {
+    font-size: 13px;
+    color: var(--muted, #6b7a90);
+}
+
+/* navigation items */
+.panel-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 6px;
+}
+
+    .panel-nav a {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 10px 8px;
+        text-decoration: none;
+        color: #0b2340;
+        border-radius: 8px;
+        transition: background .12s;
+    }
+
+        .panel-nav a .icon {
+            width: 28px;
+            text-align: center;
+            font-size: 18px;
+            color: var(--muted);
+        }
+
+        .panel-nav a:hover {
+            background: #f6f8fb;
+        }
+
+/* wallet amount to right */
+.wallet-amt {
+    margin-left: auto;
+    color: var(--muted);
+    font-weight: 600;
+}
+
+/* mobile: full-screen panel */
+@media (max-width: 700px) {
+    .right-panel {
+        left: 0;
+        right: 0;
+        width: 100%;
+        height: calc(100% - var(--topbar-height,64px));
+        border-radius: 0;
+        top: var(--topbar-height,64px);
+        transform: translateY(8px) scale(0.98);
+    }
+
+        .right-panel.open {
+            transform: translateY(0) scale(1);
+        }
+}
+
+.sidebar-list-item__svg-icon {
+    position: absolute;
+    left: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 24px;
+    height: 24px;
+    fill: var(--rig-color-content-primary);
+}
+/* --- Dropdown Compatibility Fix (Safe Override) --- */
+
+.panel-nav button.nav-toggle {
+    display: flex !important;
+    width: 100% !important;
+    background: transparent !important;
+    border: none !important;
+    text-align: left !important;
+    padding: 12px 8px !important;
+    cursor: pointer !important;
+}
+
+.nav-toggle .left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.nav-toggle .right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.nav-submenu {
+    padding: 8px 20px 8px 56px !important;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+    .nav-submenu[hidden] {
+        display: none !important;
+    }
+
+.nav-toggle .arrow {
+    transition: transform .18s ease;
+}
+
+.nav-toggle[aria-expanded="true"] .arrow {
+    transform: rotate(180deg);
+}

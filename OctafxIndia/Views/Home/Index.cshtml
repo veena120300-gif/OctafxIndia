@@ -1,0 +1,266 @@
+﻿@{
+    ViewData["Title"] = "Home";
+}
+
+<section class="hero-section">
+    <div class="hero-container">
+
+        <div class="hero-left">
+            <h1>Trading platform<br>to earn extra</h1>
+            <p>Start your ultimate investment experience to grow, achieve, and succeed.</p>
+            <a href="#" class="hero-btn">OPEN ACCOUNT</a>
+        </div>
+
+        <div class="hero-right">
+            <img src="/Images/platform.jpg" alt="Trading platform" />
+        </div>
+
+    </div>
+</section>
+
+<!-- quick-links bar (uses image icons from /Images/) -->
+<section class="quick-links-section" aria-label="Quick links">
+    <div class="quick-links-container">
+        <button class="quick-link" data-target="trading-conditions" aria-controls="trading-conditions">
+            <img src="/Images/assignment.svg" alt="Trading conditions" class="quick-icon" />
+            <span>Trading conditions</span>
+        </button>
+
+        <button class="quick-link" data-target="where-to-invest" aria-controls="where-to-invest">
+            <img src="/Images/work.svg" alt="Where to invest?" class="quick-icon" />
+            <span>Where to invest?</span>
+        </button>
+
+        <button class="quick-link" data-target="more-about-us" aria-controls="more-about-us">
+            <img src="/Images/info.svg" alt="More about us" class="quick-icon" />
+            <span>More about us</span>
+        </button>
+
+        <button class="quick-link" data-target="install-app" aria-controls="install-app">
+            <img src="/Images/install.svg" alt="Install the app" class="quick-icon" />
+            <span>Install the app</span>
+        </button>
+    </div>
+</section>
+<!-- Trading Conditions section (target for quick-link scrolling) -->
+<section id="trading-conditions-section" class="trading-conditions-section">
+    <div class="tc-container">
+
+        <header class="tc-header">
+            <h2>All set to make a profit</h2>
+        </header>
+
+        <div class="tc-cards">
+            <div class="tc-card">
+                <div class="tc-card-body">
+                    <h4>Low spreads<br />from 0.6 pips</h4>
+                    <p>Spreads affect your profits the most. The lower the spreads, the higher the profits.</p>
+                </div>
+                <div class="tc-card-media">
+                    <img src="/Images/spreads-pc.jpg" alt="Low spreads" />
+                    <!-- or for testing: src="/mnt/data/e90a8481-0b1b-4b6f-838f-612b690f3dd5.png" -->
+                </div>
+            </div>
+
+            <div class="tc-card">
+                <div class="tc-card-body">
+                    <h4>Quick withdrawals</h4>
+                    <p>Easy withdrawals and deposits via Netbanking, e-wallets, or digital currencies.</p>
+                </div>
+                <div class="tc-card-media">
+                    <img src="/Images/methods-test-pc.jpg" alt="Quick withdrawals" />
+                </div>
+            </div>
+
+            <div class="tc-card">
+                <div class="tc-card-body">
+                    <h4>Caring Customer<br />Support 24/7</h4>
+                    <p>We speak English and 10+ other languages. Whatever question you might have, drop us a line.</p>
+                </div>
+                <div class="tc-card-media">
+                    <img src="/Images/support-pc.jpg" alt="Customer support" />
+                </div>
+            </div>
+
+            <div class="tc-card">
+                <div class="tc-card-body">
+                    <h4>No commission</h4>
+                    <p>Pay no trading fees, swaps, or payment method charges. We cover everything.</p>
+                </div>
+                <div class="tc-card-media">
+                    <img src="/Images/commission-pc.jpg" alt="No commission" />
+                </div>
+            </div>
+        </div>
+
+        <div class="tc-cta">
+            <a href="/products" class="btn hero-cta">EXPLORE NOW</a>
+        </div>
+
+    </div>
+</section>
+
+<!-- WHERE TO INVEST / EDUCATION ACCORDION -->
+<section id="where-to-invest-section" class="where-to-invest-section" tabindex="-1">
+    <div class="container">
+        <header class="section-header">
+            <h2>Trading is easy when you know how to trade right</h2>
+            <p>Learn trading with expert-approved resources.</p>
+        </header>
+
+        <div class="accordion" role="tablist" aria-label="Learning resources">
+            <!-- Accordion Item -->
+            <div class="accordion-item">
+                <button class="accordion-btn" aria-expanded="false" aria-controls="acc-panel-1" id="acc-btn-1">
+                    <span class="accordion-title">Weekly webinars</span>
+                    <span class="accordion-indicator" aria-hidden="true">▾</span>
+                </button>
+                <div id="acc-panel-1" class="accordion-panel" role="region" aria-labelledby="acc-btn-1" hidden>
+                    <p>Learn to make a profit under the guidance of professional full-time traders — join weekly lessons in English.</p>
+                </div>
+            </div>
+
+            <div class="accordion-item">
+                <button class="accordion-btn" aria-expanded="false" aria-controls="acc-panel-2" id="acc-btn-2">
+                    <span class="accordion-title">Trading Ideas</span>
+                    <span class="accordion-indicator" aria-hidden="true">▾</span>
+                </button>
+                <div id="acc-panel-2" class="accordion-panel" role="region" aria-labelledby="acc-btn-2" hidden>
+                    <p>Quick, easy, and effective. Use free daily trading signals, follow instructions, and book profit.</p>
+                </div>
+            </div>
+
+            <div class="accordion-item">
+                <button class="accordion-btn" aria-expanded="false" aria-controls="acc-panel-3" id="acc-btn-3">
+                    <span class="accordion-title">Complete email course</span>
+                    <span class="accordion-indicator" aria-hidden="true">▾</span>
+                </button>
+                <div id="acc-panel-3" class="accordion-panel" role="region" aria-labelledby="acc-btn-3" hidden>
+                    <p>If you prefer reading, sign up for our email course. You will learn trading through 22 letters and practical tasks.</p>
+                </div>
+            </div>
+
+            <div class="accordion-item">
+                <button class="accordion-btn" aria-expanded="false" aria-controls="acc-panel-4" id="acc-btn-4">
+                    <span class="accordion-title">Live trading sessions</span>
+                    <span class="accordion-indicator" aria-hidden="true">▾</span>
+                </button>
+                <div id="acc-panel-4" class="accordion-panel" role="region" aria-labelledby="acc-btn-4" hidden>
+                    <p>Watch experts trade live and copy their secrets. Live explanation and opportunity to ask questions.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="cta" style="text-align:center; margin-top:36px;">
+            <a href="/Account/Register" class="hero-btn">CREATE AN ACCOUNT</a>
+        </div>
+    </div>
+</section>
+
+<!-- MORE ABOUT US SECTION -->
+<section id="more-about-us-section" class="more-about-us-section" tabindex="-1">
+    <div class="abu-container">
+        <h2 class="abu-title">
+            Proud to take care of your<br>investment journey
+        </h2>
+        <h3 class="abu-subtitle">
+            Most Reliable Broker Global 2024
+        </h3>
+        <div class="stats-grid">
+            <div class="stat-box">
+                <h4>14 years</h4>
+                <p>worldwide</p>
+            </div>
+            <div class="stat-box">
+                <h4>100+</h4>
+                <p>awards and counting</p>
+            </div>
+            <div class="stat-box">
+                <h4>42 mln</h4>
+                <p>trading accounts opened</p>
+            </div>
+            <div class="stat-box">
+                <h4>180+</h4>
+                <p>countries across<br>the world</p>
+            </div>
+            <div class="stat-box">
+                <h4>1+ mln</h4>
+                <p>YouTube subscribers</p>
+            </div>
+            <div class="stat-box">
+                <h4>$33+ mln</h4>
+                <p>bonus funds paid out</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- INSTALL THE APP SECTION -->
+<section id="install-app" class="install-app-section" aria-label="Install the app">
+    <div class="install-app-container">
+
+        <!-- LEFT TEXT -->
+        <div class="install-buttons">
+            <h2 class="install-app-title">Get yourself an extra source of income</h2>
+            <p class="install-app-sub">Discover global markets with an easy-to-use app.</p>
+
+            <div class="store-buttons-row">
+
+                <a class="store-btn-wrapper" href="https://play.google.com/">
+                    <img src="/Images/google-play-logo.svg" alt="Google Play" class="store-logo">
+                    <div class="store-text">
+                        <span>Get it on</span><br>
+                        <b>Google Play</b>
+                    </div>
+                </a>
+
+                <a class="store-btn-wrapper" href="#">
+                    <img src="/Images/ios-logo.svg" alt="App Store" class="store-logo">
+                    <div class="store-text">
+                        <span>Download on the</span><br>
+                        <b>App Store</b>
+                    </div>
+                </a>
+
+            </div>
+        </div>
+
+
+        <!-- RIGHT PHONE + QR -->
+        <div class="install-app-right" aria-hidden="false">
+            <div class="phone-wrapper" role="img" aria-label="Mobile app preview">
+                <!-- Using uploaded local image so result matches your asset exactly -->
+                <img src="~/Images/mobile-app.jpg" class="phone-img" alt="Mobile App" />
+
+                <!-- QR overlay (use your qr file path if different) -->
+                <!-- If your QR is at /Images/qr.png keep it; if you uploaded to /mnt/data use that path -->
+                <img src="/Images/qr.png" class="qr-img" alt="QR Code" />
+            </div>
+        </div>
+
+    </div>
+</section>
+
+<script>
+    document.querySelectorAll('.accordion-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const item = btn.closest('.accordion-item');
+        const panel = item.querySelector('.accordion-panel');
+        const isOpen = item.classList.contains('open');
+
+        // Close all items
+        document.querySelectorAll('.accordion-item').forEach(i => {
+          i.classList.remove('open');
+          i.querySelector('.accordion-panel').hidden = true;
+          i.querySelector('.accordion-btn').setAttribute('aria-expanded', 'false');
+        });
+
+        // Toggle current
+        if (!isOpen) {
+          item.classList.add('open');
+          panel.hidden = false;
+          btn.setAttribute('aria-expanded', 'true');
+        }
+      });
+    });
+</script>
