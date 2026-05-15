@@ -40,12 +40,17 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 .AddEntityFrameworkStores<ApplicationDbContext>()
 .AddDefaultTokenProviders();
 
-builder.Services.ConfigureApplicationCookie(options =>
-{
-    options.Cookie.HttpOnly = true;
-    options.Cookie.SameSite = SameSiteMode.Lax;
-    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
-});
+builder.Services.ConfigureApplicationCookie(options => 
+{ 
+    // IMPORTANT
+    options.LoginPath = "/"; 
+    options.AccessDeniedPath = "/"; 
+    options.Cookie.Name = "OctaAuth"; 
+    options.Cookie.HttpOnly = true; 
+    options.Cookie.SameSite = SameSiteMode.Lax; 
+    options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest; 
+    options.ExpireTimeSpan = TimeSpan.FromDays(7); 
+    options.SlidingExpiration = true; });
 
 // 3. MVC and Razor Pages
 builder.Services.AddControllersWithViews();
@@ -98,7 +103,7 @@ if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
     app.UseHsts();
-    app.UseHttpsRedirection();
+    //app.UseHttpsRedirection();
 }
 
 app.UseStaticFiles();
