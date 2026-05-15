@@ -17,7 +17,7 @@ namespace OctafxIndia.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "8.0.2")
+                .HasAnnotation("ProductVersion", "8.0.11")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -154,6 +154,97 @@ namespace OctafxIndia.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
+            modelBuilder.Entity("OctafxIndia.Data.SiteData", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Key")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Value")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Key");
+
+                    b.ToTable("SiteData");
+                });
+
+            modelBuilder.Entity("OctafxIndia.Data.TradingAccount", b =>
+                {
+                    b.Property<int>("id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("id"));
+
+                    b.Property<string>("AccountName")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("account_name");
+
+                    b.Property<string>("AccountNumber")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("account_number");
+
+                    b.Property<decimal>("Balance")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("numeric(18,2)")
+                        .HasDefaultValue(0m)
+                        .HasColumnName("balance");
+
+                    b.Property<decimal>("Equity")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("numeric(18,2)")
+                        .HasDefaultValue(0m)
+                        .HasColumnName("equity");
+
+                    b.Property<decimal>("FreeMargin")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("numeric(18,2)")
+                        .HasDefaultValue(0m)
+                        .HasColumnName("free_margin");
+
+                    b.Property<DateTime>("LastUpdated")
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("timestamp")
+                        .HasColumnName("last_updated")
+                        .HasDefaultValueSql("NOW()");
+
+                    b.Property<string>("Leverage")
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasDefaultValue("1:1000")
+                        .HasColumnName("leverage");
+
+                    b.Property<bool>("NoSwap")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("no_swap");
+
+                    b.Property<string>("Server")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("server");
+
+                    b.HasKey("id")
+                        .HasName("pk_trading_accounts");
+
+                    b.ToTable("trading_accounts", (string)null);
+                });
+
             modelBuilder.Entity("OctafxIndia.Models.ApplicationUser", b =>
                 {
                     b.Property<string>("Id")
@@ -170,6 +261,7 @@ namespace OctafxIndia.Migrations
                         .HasColumnType("text");
 
                     b.Property<string>("Country")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("Email")
@@ -180,6 +272,7 @@ namespace OctafxIndia.Migrations
                         .HasColumnType("boolean");
 
                     b.Property<string>("FullName")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<bool>("LockoutEnabled")
@@ -189,6 +282,7 @@ namespace OctafxIndia.Migrations
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Nickname")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("NormalizedEmail")
@@ -219,6 +313,7 @@ namespace OctafxIndia.Migrations
                         .HasColumnType("character varying(256)");
 
                     b.Property<string>("VerificationStatus")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.HasKey("Id");
@@ -231,6 +326,65 @@ namespace OctafxIndia.Migrations
                         .HasDatabaseName("UserNameIndex");
 
                     b.ToTable("AspNetUsers", (string)null);
+                });
+
+            modelBuilder.Entity("OctafxIndia.Models.UserTradingAccount", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("AccountNumber")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("account_number");
+
+                    b.Property<string>("AccountType")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("account_type");
+
+                    b.Property<decimal>("Balance")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("numeric(18,2)")
+                        .HasDefaultValue(0m)
+                        .HasColumnName("balance");
+
+                    b.Property<decimal>("Equity")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("numeric(18,2)")
+                        .HasDefaultValue(0m)
+                        .HasColumnName("equity");
+
+                    b.Property<DateTime>("LastUpdated")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp")
+                        .HasColumnName("last_updated")
+                        .HasDefaultValueSql("NOW()");
+
+                    b.Property<string>("Server")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("server");
+
+                    b.Property<string>("Status")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("status");
+
+                    b.Property<string>("UserId")
+                        .HasMaxLength(450)
+                        .HasColumnType("character varying(450)")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_user_trading_accounts");
+
+                    b.ToTable("user_trading_accounts", (string)null);
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
