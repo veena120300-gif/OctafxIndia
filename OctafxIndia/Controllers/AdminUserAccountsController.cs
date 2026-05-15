@@ -1,41 +1,41 @@
-﻿using System;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using OctafxIndia.Data;
 using OctafxIndia.Models;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace OctafxIndia.Controllers
 {
     [Authorize(Roles = "Admin")]
     public class AdminUserAccountsController : Controller
     {
-        private readonly ApplicationDbContext _db;
+        private readonly ApplicationDbContext _dbContext;
         private readonly ILogger<AdminUserAccountsController> _logger;
 
-        public AdminUserAccountsController(ApplicationDbContext db, ILogger<AdminUserAccountsController> logger)
+        public AdminUserAccountsController(ApplicationDbContext dbContext, ILogger<AdminUserAccountsController> logger)
         {
-            _db = db;
+            _dbContext = dbContext;
             _logger = logger;
         }
 
         // GET: /AdminUserAccounts
-        public async Task<IActionResult> Index()
+        [HttpGet]
+        public async Task<IActionResult> IndexAsync()
         {
-            var list = await _db.UserTradingAccounts
-                                .OrderBy(a => a.Id)
-                                .ToListAsync();
-
-            return View(list);
+            var userTradingAccounts = await _dbContext.UserTradingAccounts
+                                                 .OrderBy(acc => acc.Id)
+                                                 .ToListAsync();
+            return View(userTradingAccounts);
         }
 
         // GET: /AdminUserAccounts/Create
+        [HttpGet]
         public IActionResult Create()
         {
-            var model = new UserTradingAccount
+            var viewModel = new UserTradingAccount
             {
                 AccountType = "REAL",
                 Server = "OctaFX-Real7",
@@ -43,133 +43,96 @@ namespace OctafxIndia.Controllers
                 Balance = 0m,
                 Equity = 0m
             };
-
-            return View("CreateEdit", model);
-        }
-
-        // POST: /AdminUserAccounts/Create
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(UserTradingAccount model)
-        {
-            if (!ModelState.IsValid)
-                return View("CreateEdit", model);
-
-            try
-            {
-                _db.UserTradingAccounts.Add(model);
-                await _db.SaveChangesAsync();
-
-                TempData["Success"] = "Account added.";
-                return RedirectToAction(nameof(Index));
-            }
-            catch (DbUpdateException dbEx)
-            {
-                _logger.LogError(dbEx, "DbUpdateException in Create: {Inner}", dbEx.InnerException?.Message);
-
-                ModelState.AddModelError("", "Database error while creating account.");
-                TempData["CreateErrors"] = dbEx.InnerException?.Message ?? dbEx.Message;
-
-                return View("CreateEdit", model);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Unexpected error in Create.");
-
-                ModelState.AddModelError("", "Unexpected error.");
-                TempData["CreateErrors"] = ex.Message;
-
-                return View("CreateEdit", model);
-            }
+            return View("CreateEdit", viewModel);
         }
 
         // GET: /AdminUserAccounts/Edit/5
-        public async Task<IActionResult> Edit(int id)
+        [HttpGet]
+        public async Task<IActionResult> EditAsync(int id)
         {
-            var entity = await _db.UserTradingAccounts.FindAsync(id);
-            if (entity == null) return NotFound();
-
-            return View("CreateEdit", entity);
+            var userTradingAccount = await _dbContext.UserTradingAccounts.FindAsync(id);
+            if (userTradingAccount == null)
+            {
+                return NotFound();
+            }
+            return View("CreateEdit", userTradingAccount);
         }
 
-        // POST: /AdminUserAccounts/Edit
+        // POST: /AdminUserAccounts/CreateEdit
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(UserTradingAccount model)
+        public async Task<IActionResult> CreateEditAsync(UserTradingAccount model)
         {
             if (!ModelState.IsValid)
+            {
                 return View("CreateEdit", model);
+            }
 
             if (model.Id == 0)
-                return BadRequest();
+            {
+                // Create new entity
+                _dbContext.UserTradingAccounts.Add(model);
+                TempData["Success"] = "Account added successfully.";
+            }
+            else
+            {
+                // Update existing entity
+                var userTradingAccount = await _dbContext.UserTradingAccounts.FindAsync(model.Id);
+                if (userTradingAccount == null)
+                {
+                    return NotFound();
+                }
 
-            var entity = await _db.UserTradingAccounts.FindAsync(model.Id);
-            if (entity == null) return NotFound();
+                userTradingAccount.AccountNumber = model.AccountNumber;
+                userTradingAccount.AccountType = model.AccountType;
+                userTradingAccount.Server = model.Server;
+                userTradingAccount.Balance = model.Balance;
+                userTradingAccount.Equity = model.Equity;
+                userTradingAccount.Status = model.Status;
 
-            // Map editable fields
-            entity.AccountNumber = model.AccountNumber;
-            entity.AccountType = model.AccountType;
-            entity.Server = model.Server;
-            entity.Balance = model.Balance;
-            entity.Equity = model.Equity;
-            entity.Status = model.Status;
+                _dbContext.UserTradingAccounts.Update(userTradingAccount);
+                TempData["Success"] = "Account updated successfully.";
+            }
 
             try
             {
-                _db.UserTradingAccounts.Update(entity);
-                await _db.SaveChangesAsync();
-
-                TempData["Success"] = "Account updated.";
-                return RedirectToAction(nameof(Index));
+                await _dbContext.SaveChangesAsync();
             }
-            catch (DbUpdateException dbEx)
+            catch (DbUpdateException ex)
             {
-                _logger.LogError(dbEx, "DbUpdateException in Edit: {Inner}", dbEx.InnerException?.Message);
-
-                ModelState.AddModelError("", "Database error while updating.");
-                TempData["EditErrors"] = dbEx.InnerException?.Message ?? dbEx.Message;
-
+                _logger.LogError(ex, "Database error occurred while saving UserTradingAccount.");
+                ModelState.AddModelError(string.Empty, "A database error occurred. Please try again.");
                 return View("CreateEdit", model);
             }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Unexpected error in Edit.");
 
-                ModelState.AddModelError("", "Unexpected error.");
-                TempData["EditErrors"] = ex.Message;
-
-                return View("CreateEdit", model);
-            }
+            return RedirectToAction(nameof(Index));
         }
 
         // POST: /AdminUserAccounts/Delete/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Delete(int id)
+        public async Task<IActionResult> DeleteAsync(int id)
         {
-            var entity = await _db.UserTradingAccounts.FindAsync(id);
-            if (entity == null) return NotFound();
+            var userTradingAccount = await _dbContext.UserTradingAccounts.FindAsync(id);
+            if (userTradingAccount == null)
+            {
+                return NotFound();
+            }
+
+            _dbContext.UserTradingAccounts.Remove(userTradingAccount);
 
             try
             {
-                _db.UserTradingAccounts.Remove(entity);
-                await _db.SaveChangesAsync();
+                await _dbContext.SaveChangesAsync();
+                TempData["Success"] = "Account deleted successfully.";
+            }
+            catch (DbUpdateException ex)
+            {
+                _logger.LogError(ex, "Database error occurred while deleting UserTradingAccount.");
+                TempData["Error"] = "A database error occurred while deleting the account.";
+            }
 
-                TempData["Success"] = "Account deleted.";
-                return RedirectToAction(nameof(Index));
-            }
-            catch (DbUpdateException dbEx)
-            {
-                _logger.LogError(dbEx, "DbUpdateException in Delete: {Inner}", dbEx.InnerException?.Message);
-                TempData["EditErrors"] = dbEx.InnerException?.Message ?? dbEx.Message;
-                return RedirectToAction(nameof(Index));
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Unexpected error in Delete.");
-                TempData["EditErrors"] = ex.Message;
-                return RedirectToAction(nameof(Index));
-            }
+            return RedirectToAction(nameof(Index));
         }
     }
 }

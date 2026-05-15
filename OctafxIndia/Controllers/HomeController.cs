@@ -1,8 +1,9 @@
-﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using OctafxIndia.Data;
-// 👇 adjust this if your ApplicationUser is in a different namespace
 using OctafxIndia.Models;
 using OctafxIndia.ViewModels;
 using System;
@@ -11,43 +12,44 @@ using System.Threading.Tasks;
 
 namespace OctafxIndia.Controllers
 {
+    [Authorize]
     public class HomeController : Controller
     {
-        private readonly ApplicationDbContext _db;
+        private readonly ApplicationDbContext _dbContext;
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly ILogger<HomeController> _logger;
 
-        // SINGLE constructor: inject both DbContext and UserManager
-        public HomeController(ApplicationDbContext db, UserManager<ApplicationUser> userManager)
+        public HomeController(ApplicationDbContext dbContext, UserManager<ApplicationUser> userManager, ILogger<HomeController> logger)
         {
-            _db = db;
+            _dbContext = dbContext;
             _userManager = userManager;
+            _logger = logger;
         }
 
+        [AllowAnonymous]
         public IActionResult Index()
         {
             return View();
         }
 
-        public async Task<IActionResult> AfterLogin()
+        [HttpGet]
+        public async Task<IActionResult> AfterLoginAsync()
         {
             var user = await _userManager.GetUserAsync(User);
-            // 1) Load the balance row (latest) for the balance box
-            var acc = await _db.TradingAccounts
-                               .OrderByDescending(a => a.LastUpdated)
-                               .FirstOrDefaultAsync();
+            var tradingAccount = await _dbContext.TradingAccounts
+                                           .OrderByDescending(acc => acc.LastUpdated)
+                                           .FirstOrDefaultAsync();
 
-            // Build viewmodel with safe defaults if balance row is missing
-            var vm = new BalanceViewModel
+            var viewModel = new BalanceViewModel
             {
-                Balance = acc?.Balance ?? 0m,
-                FreeMargin = acc?.FreeMargin ?? 0m,
-                Equity = acc?.Equity ?? 0m,
-                Leverage = acc?.Leverage ?? "1:1000",
-                Server = acc?.Server ?? "OctaFX-Real7",
-                AccountNumber = acc?.AccountNumber ?? "N/A",
-                AccountType = acc?.AccountName ?? "REAL",
-                NoSwap = acc?.NoSwap ?? true,
-                // 👇 map user info (null-safe)
+                Balance = tradingAccount?.Balance ?? 0m,
+                FreeMargin = tradingAccount?.FreeMargin ?? 0m,
+                Equity = tradingAccount?.Equity ?? 0m,
+                Leverage = tradingAccount?.Leverage ?? "1:1000",
+                Server = tradingAccount?.Server ?? "OctaFX-Real7",
+                AccountNumber = tradingAccount?.AccountNumber ?? "N/A",
+                AccountType = tradingAccount?.AccountName ?? "REAL",
+                NoSwap = tradingAccount?.NoSwap ?? true,
                 Email = user?.Email,
                 PhoneNumber = user?.PhoneNumber,
                 FullName = user?.FullName,
@@ -57,103 +59,91 @@ namespace OctafxIndia.Controllers
                 Nickname = user?.Nickname
             };
 
-            // 2) Load ALL trading accounts (global list) and map to the viewmodel.
-            //    NOTE: this intentionally does NOT filter by user - everyone sees these rows.
-            var allAccounts = await _db.UserTradingAccounts
-                                       .OrderBy(a => a.Id)
-                                       .ToListAsync();
+            viewModel.Accounts = await _dbContext.UserTradingAccounts
+                .OrderBy(acc => acc.Id)
+                .Select(acc => new TradingAccountItemViewModel
+                {
+                    AccountNumber = acc.AccountNumber,
+                    AccountType = acc.AccountType ?? "REAL",
+                    Server = acc.Server,
+                    Balance = acc.Balance,
+                    Equity = acc.Equity,
+                    Status = acc.Status
+                })
+                .ToListAsync();
 
-            vm.Accounts = allAccounts.Select(a => new TradingAccountItemViewModel
-            {
-                AccountNumber = a.AccountNumber,
-                AccountType = a.AccountType ?? "REAL",
-                Server = a.Server,
-                Balance = a.Balance,
-                Equity = a.Equity,
-                Status = a.Status
-            }).ToList();
-
-            return View(vm);
+            return View(viewModel);
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> UpdateProfile(
-    string email,
-    string phoneNumber,
-    string fullName,
-    DateTime? birthDate,
-    string country,
-    string nickname,
-    string verificationStatus)
+        public async Task<IActionResult> UpdateProfileAsync(
+            string email,
+            string phoneNumber,
+            string fullName,
+            DateTime? birthDate,
+            string country,
+            string nickname,
+            string verificationStatus)
         {
             try
             {
                 var user = await _userManager.GetUserAsync(User);
                 if (user == null)
-                    return Challenge();
-
-                // --- Email / username ---
-                if (!string.IsNullOrWhiteSpace(email) &&
-                    !string.Equals(user.Email, email, StringComparison.OrdinalIgnoreCase))
                 {
-                    var emailResult = await _userManager.SetEmailAsync(user, email);
-                    if (!emailResult.Succeeded)
-                    {
-                        TempData["ProfileError"] =
-                            string.Join("; ", emailResult.Errors.Select(e => e.Description));
-                        return RedirectToAction("AfterLogin", "Home");
-                    }
-
-                    var userNameResult = await _userManager.SetUserNameAsync(user, email);
-                    if (!userNameResult.Succeeded)
-                    {
-                        TempData["ProfileError"] =
-                            string.Join("; ", userNameResult.Errors.Select(e => e.Description));
-                        return RedirectToAction("AfterLogin", "Home");
-                    }
+                    return Challenge();
                 }
 
-                // --- Other fields ---
+                if (!string.IsNullOrWhiteSpace(email) && !string.Equals(user.Email, email, StringComparison.OrdinalIgnoreCase))
+                {
+                    var emailResult = await _userManager.SetEmailAsync(user, email);
+                    if (!emailResult.Succeeded) return RedirectToAfterLoginWithError(emailResult);
+
+                    var userNameResult = await _userManager.SetUserNameAsync(user, email);
+                    if (!userNameResult.Succeeded) return RedirectToAfterLoginWithError(userNameResult);
+                }
+
                 user.PhoneNumber = phoneNumber;
                 user.FullName = fullName;
+                user.Country = country;
+                user.Nickname = nickname;
 
-                // 🔥 IMPORTANT: normalize BirthDate to UTC (or null)
                 if (birthDate.HasValue)
                 {
-                    // If this is just a date (no time), keep date part and mark as UTC
-                    var d = birthDate.Value.Date;
-                    user.BirthDate = DateTime.SpecifyKind(d, DateTimeKind.Utc);
+                    // Normalize the BirthDate to ensure consistency across the application
+                    user.BirthDate = DateTime.SpecifyKind(birthDate.Value.Date, DateTimeKind.Utc);
                 }
                 else
                 {
                     user.BirthDate = null;
                 }
 
-                user.Country = country;
-                user.Nickname = nickname;
-
                 if (!string.IsNullOrWhiteSpace(verificationStatus))
-                    user.VerificationStatus = verificationStatus;
-
-                var result = await _userManager.UpdateAsync(user);
-                if (!result.Succeeded)
                 {
-                    TempData["ProfileError"] =
-                        string.Join("; ", result.Errors.Select(e => e.Description));
-                    return RedirectToAction("AfterLogin", "Home");
+                    user.VerificationStatus = verificationStatus;
                 }
 
-                TempData["ProfileMessage"] = "Your personal information has been updated.";
-                return RedirectToAction("AfterLogin", "Home");
+                var updateResult = await _userManager.UpdateAsync(user);
+                if (!updateResult.Succeeded)
+                {
+                    return RedirectToAfterLoginWithError(updateResult);
+                }
+
+                TempData["ProfileMessage"] = "Your personal information has been successfully updated.";
             }
             catch (Exception ex)
             {
-                // optional: log ex
-                TempData["ProfileError"] = "Unexpected error while saving profile.";
-                return RedirectToAction("AfterLogin", "Home");
+                _logger.LogError(ex, "An unexpected error occurred while updating the profile.");
+                TempData["ProfileError"] = "An unexpected error occurred while saving your profile.";
             }
+
+            return RedirectToAction(nameof(AfterLogin));
         }
 
+        private IActionResult RedirectToAfterLoginWithError(IdentityResult result)
+        {
+            TempData["ProfileError"] = string.Join("; ", result.Errors.Select(e => e.Description));
+            return RedirectToAction(nameof(AfterLogin));
+        }
     }
 }

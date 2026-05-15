@@ -1,76 +1,76 @@
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using OctafxIndia.Data;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using OctafxIndia.Data;
 using OctafxIndia.Models;
+using System;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// ---------------- Configuration (connection string) ----------------
-// Priority: appsettings -> DB_CONNECTION env var -> local fallback
-var conn = Environment.GetEnvironmentVariable("DB_CONNECTION");
+// --- Configure Services ---
 
-// ---------------- Services ----------------
-builder.Services.AddDbContext<ApplicationDbContext>(opts =>
-    opts.UseNpgsql(conn));
+// 1. Database Context
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
+    ?? Environment.GetEnvironmentVariable("DB_CONNECTION");
 
-//var conn = builder.Configuration.GetConnectionString("DefaultConnection")
-//           ?? Environment.GetEnvironmentVariable("DB_CONNECTION")
-//           ?? "Host=127.0.0.1;Port=5432;Database=octafxdb;Username=dbuser;Password=Str0ngDBPass!";
+if (string.IsNullOrEmpty(connectionString))
+{
+    throw new InvalidOperationException("Database connection string is not configured.");
+}
 
-//builder.Services.AddDbContext<ApplicationDbContext>(opts =>
-//{
-//    opts.UseInMemoryDatabase("LocalTestDb");
-//});
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+    options.UseNpgsql(connectionString));
 
-/*
- Use AddIdentity when you need roles. Do NOT call AddDefaultIdentity and AddIdentity together.
- */
+// 2. Identity
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 {
     options.Password.RequiredLength = 8;
     options.Password.RequireNonAlphanumeric = false;
     options.Password.RequireDigit = false;
     options.User.RequireUniqueEmail = true;
-
-    // lockout options
     options.Lockout.MaxFailedAccessAttempts = 5;
     options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
 })
-    .AddEntityFrameworkStores<ApplicationDbContext>()
-    .AddDefaultTokenProviders();
+.AddEntityFrameworkStores<ApplicationDbContext>()
+.AddDefaultTokenProviders();
 
-builder.Services.ConfigureApplicationCookie(opts =>
+builder.Services.ConfigureApplicationCookie(options =>
 {
-    opts.Cookie.HttpOnly = true;
-    opts.Cookie.SameSite = SameSiteMode.Lax;
-    // Cloud Run provides HTTPS; require secure cookies in production
-    opts.Cookie.SecurePolicy = CookieSecurePolicy.Always;
-    //opts.LoginPath = "/Identity/Account/Login";
+    options.Cookie.HttpOnly = true;
+    options.Cookie.SameSite = SameSiteMode.Lax;
+    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
 });
 
+// 3. MVC and Razor Pages
 builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();
-// ---------------- Bind Kestrel to PORT from environment (Cloud Run sets PORT)
+
+// 4. Kestrel Configuration
 var portEnv = Environment.GetEnvironmentVariable("PORT") ?? "8080";
-if (!int.TryParse(portEnv, out var portNumeric)) portNumeric = 8080;
-
-builder.WebHost.ConfigureKestrel(options =>
+if (int.TryParse(portEnv, out var port))
 {
-    options.ListenAnyIP(portNumeric);
-});
-builder.WebHost.UseUrls($"http://0.0.0.0:{portNumeric}");
+    builder.WebHost.ConfigureKestrel(options => options.ListenAnyIP(port));
+}
 
-// ---------------- Build app ----------------
+// --- Build Application ---
+
 var app = builder.Build();
 
-// forwarded headers for Cloud Run (X-Forwarded-For / X-Forwarded-Proto)
+// --- Configure Middleware ---
+
+// Forwarded Headers Middleware for Cloud Environments
 app.UseForwardedHeaders(new ForwardedHeadersOptions
 {
     ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
 });
 
+// Environment-specific configurations
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
@@ -83,12 +83,16 @@ app.UseRouting();
 
 app.UseAuthentication();
 app.UseAuthorization();
+
+// --- Map Endpoints ---
+
 app.MapRazorPages();
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
-// ---------------- Migrate & Seed (wrapped so startup won't crash) ----------------
+// --- Database Migration and Seeding ---
+
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
@@ -96,99 +100,21 @@ using (var scope = app.Services.CreateScope())
 
     try
     {
-        var db = services.GetRequiredService<ApplicationDbContext>();
+        var dbContext = services.GetRequiredService<ApplicationDbContext>();
+        logger.LogInformation("Applying database migrations...");
+        dbContext.Database.Migrate();
+        logger.LogInformation("Migrations applied successfully.");
 
-        // Apply any pending migrations
-        logger.LogInformation("Attempting to apply migrations...");
-        db.Database.Migrate();
-        logger.LogInformation("Migrations applied.");
-
-        // Run seeding (idempotent)
+        logger.LogInformation("Seeding database...");
         await SeedData.InitializeAsync(services, logger);
-        logger.LogInformation("Seeding complete.");
+        logger.LogInformation("Seeding completed successfully.");
     }
     catch (Exception ex)
     {
-        // IMPORTANT: we log the error and continue so container can bind the port.
-        // This prevents Cloud Run health-check failures while you debug DB connectivity.
-        var logger2 = services.GetRequiredService<ILogger<Program>>();
-        logger2.LogError(ex, "Database migrate/seed failed during startup. Continuing so container can start for debugging.");
+        logger.LogError(ex, "An error occurred during database migration or seeding. The application will continue to run.");
     }
 }
+
+// --- Run Application ---
 
 app.Run();
-
-
-// ---------------- SeedData helper ----------------
-public static class SeedData
-{
-    public static async Task InitializeAsync(IServiceProvider services, ILogger logger)
-    {
-        var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
-        var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
-        var db = services.GetRequiredService<ApplicationDbContext>();
-
-        // Ensure Admin role exists
-        if (!await roleManager.RoleExistsAsync("Admin"))
-        {
-            var r = await roleManager.CreateAsync(new IdentityRole("Admin"));
-            if (!r.Succeeded) logger.LogWarning("Could not create Admin role: {Errors}", string.Join(',', r.Errors.Select(e => e.Description)));
-        }
-
-        // Four allowed users (change emails & passwords before production)
-        var users = new[]
-        {
-            new { Email="user1@example.com", Password="UserPass123!" },
-            new { Email="user2@example.com", Password="UserPass123!" },
-            new { Email="user3@example.com", Password="UserPass123!" },
-            new { Email="user4@example.com", Password="UserPass123!" }
-        };
-
-        foreach (var u in users)
-        {
-            var existing = await userManager.FindByEmailAsync(u.Email);
-            if (existing == null)
-            {
-                var user = new ApplicationUser { UserName = u.Email, Email = u.Email, EmailConfirmed = true };
-                var res = await userManager.CreateAsync(user, u.Password);
-                if (!res.Succeeded) logger.LogWarning("Failed creating user {Email}: {Errors}", u.Email, string.Join(',', res.Errors.Select(e => e.Description)));
-            }
-        }
-
-        // Admin account (read from env vars for production)
-        var adminEmail = Environment.GetEnvironmentVariable("ADMIN_EMAIL") ?? "admin@example.com";
-        var adminPwd = Environment.GetEnvironmentVariable("ADMIN_PASSWORD") ?? "AdminPass123!";
-
-        var adminUser = await userManager.FindByEmailAsync(adminEmail);
-        if (adminUser == null)
-        {
-            adminUser = new ApplicationUser { UserName = adminEmail, Email = adminEmail, EmailConfirmed = true };
-            var res = await userManager.CreateAsync(adminUser, adminPwd);
-            if (!res.Succeeded) logger.LogWarning("Failed creating admin {Email}: {Errors}", adminEmail, string.Join(',', res.Errors.Select(e => e.Description)));
-        }
-
-        // Ensure admin role is assigned
-        if (!await userManager.IsInRoleAsync(adminUser, "Admin"))
-        {
-            var r = await userManager.AddToRoleAsync(adminUser, "Admin");
-            if (!r.Succeeded) logger.LogWarning("Failed adding admin to role: {Errors}", string.Join(',', r.Errors.Select(e => e.Description)));
-        }
-
-        // Seed minimal site data table if exists in DbContext
-        try
-        {
-            if (db.SiteData != null && !db.SiteData.Any())
-            {
-                db.SiteData.AddRange(
-                    new SiteData { Key = "HeroTitle", Value = "Welcome - edit via admin" },
-                    new SiteData { Key = "Footer", Value = "© OctafxIndia" }
-                );
-                await db.SaveChangesAsync();
-            }
-        }
-        catch (Exception ex)
-        {
-            logger.LogWarning(ex, "SiteData seeding skipped or failed.");
-        }
-    }
-}

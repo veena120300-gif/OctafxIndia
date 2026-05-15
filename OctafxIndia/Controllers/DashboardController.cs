@@ -1,45 +1,49 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using OctafxIndia.Data;
 using OctafxIndia.ViewModels;
 using System.Linq;
 using System.Threading.Tasks;
-using OctafxIndia.Data;
-using OctafxIndia.ViewModels;
 
 namespace OctafxIndia.Controllers
 {
+    [Authorize]
     public class DashboardController : Controller
     {
-        private readonly ApplicationDbContext _db;
+        private readonly ApplicationDbContext _dbContext;
 
-        public DashboardController(ApplicationDbContext db)
+        public DashboardController(ApplicationDbContext dbContext)
         {
-            _db = db;
+            _dbContext = dbContext;
         }
 
-        public async Task<IActionResult> AfterLogin()
+        // GET: /Dashboard/AfterLogin
+        [HttpGet]
+        public async Task<IActionResult> AfterLoginAsync()
         {
-            // Demo: pick latest account. Replace with user-specific filter in real app.
-            var acc = await _db.TradingAccounts.OrderByDescending(a => a.LastUpdated).FirstOrDefaultAsync();
-            if (acc == null)
+            var viewModel = await _dbContext.TradingAccounts
+                .OrderByDescending(acc => acc.LastUpdated)
+                .Select(acc => new BalanceViewModel
+                {
+                    Balance = acc.Balance,
+                    FreeMargin = acc.FreeMargin,
+                    Equity = acc.Equity,
+                    Leverage = acc.Leverage,
+                    Server = acc.Server,
+                    AccountNumber = acc.AccountNumber,
+                    AccountType = acc.AccountName,
+                    NoSwap = acc.NoSwap
+                })
+                .FirstOrDefaultAsync();
+
+            if (viewModel == null)
             {
+                // Return a view with a new (empty) view model if no trading account exists
                 return View(new BalanceViewModel());
             }
 
-            var vm = new BalanceViewModel
-            {
-                Balance = acc.Balance,
-                FreeMargin = acc.FreeMargin,
-                Equity = acc.Equity,
-                Leverage = acc.Leverage,
-                Server = acc.Server,
-                AccountNumber = acc.AccountNumber,
-                AccountType = acc.AccountName,
-                NoSwap = acc.NoSwap
-            };
-
-            return View(vm);
+            return View(viewModel);
         }
     }
 }

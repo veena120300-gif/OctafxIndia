@@ -1,39 +1,32 @@
-﻿using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using OctafxIndia.Data;
+using OctafxIndia.Models;
 using OctafxIndia.ViewModels;
+using System.Linq;
+using System.Security.Claims;
+using System.Threading.Tasks;
 
 namespace OctafxIndia.Controllers
 {
     [Authorize(Roles = "Admin")]
     public class AdminController : Controller
     {
-        private readonly ApplicationDbContext _db;
+        private readonly ApplicationDbContext _dbContext;
 
-        // 🔥 HARD-CODE YOUR ADMIN EMAIL HERE 🔥
-        private const string ADMIN_EMAIL = "chandrarout0@gmail.com";
-
-        public AdminController(ApplicationDbContext db) => _db = db;
-
-        private bool IsAllowedAdmin()
+        public AdminController(ApplicationDbContext dbContext)
         {
-            var email = User.FindFirstValue(ClaimTypes.Email);
-            return email != null && email.Equals(ADMIN_EMAIL, StringComparison.OrdinalIgnoreCase);
+            _dbContext = dbContext;
         }
 
-        public async Task<IActionResult> EditTradingAccount()
+        // GET: /Admin/EditTradingAccount
+        [HttpGet]
+        public async Task<IActionResult> EditTradingAccountAsync()
         {
-            if (!IsAllowedAdmin())
-                return Forbid();
-
-            var acc = await _db.TradingAccounts
-                .OrderByDescending(a => a.LastUpdated)
-                .FirstOrDefaultAsync();
-
-            var vm = acc != null
-                ? new EditTradingAccountViewModel
+            var viewModel = await _dbContext.TradingAccounts
+                .OrderByDescending(acc => acc.LastUpdated)
+                .Select(acc => new EditTradingAccountViewModel
                 {
                     AccountNumber = acc.AccountNumber,
                     AccountName = acc.AccountName,
@@ -42,44 +35,78 @@ namespace OctafxIndia.Controllers
                     Equity = acc.Equity,
                     Leverage = acc.Leverage,
                     Server = acc.Server,
-                    NoSwap = acc.NoSwap
-                }
-                : new EditTradingAccountViewModel();
+                    NoSwap = acc.NoSwap,
+                })
+                .FirstOrDefaultAsync();
 
-            return View(vm);
+            if (viewModel == null)
+            {
+                // Return a view with a new (empty) view model if no trading account exists
+                return View(new EditTradingAccountViewModel());
+            }
+
+            return View(viewModel);
         }
 
+        // POST: /Admin/SaveTradingAccount
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> SaveTradingAccount(EditTradingAccountViewModel model)
+        public async Task<IActionResult> SaveTradingAccountAsync(EditTradingAccountViewModel model)
         {
-            if (!IsAllowedAdmin())
-                return Forbid();
-
             if (!ModelState.IsValid)
+            {
                 return View(nameof(EditTradingAccount), model);
+            }
 
-            // UPSERT to enforce single-row table
-            await _db.Database.ExecuteSqlInterpolatedAsync($@"
-INSERT INTO trading_accounts (
-    id, account_number, account_name, balance,
-    free_margin, equity, leverage, server, no_swap, last_updated
-) VALUES (
-    1, {model.AccountNumber}, {model.AccountName},
-    {model.Balance}, {model.FreeMargin}, {model.Equity},
-    {model.Leverage}, {model.Server}, {model.NoSwap}, NOW()
-)
-ON CONFLICT (id) DO UPDATE SET
-    account_number = EXCLUDED.account_number,
-    account_name   = EXCLUDED.account_name,
-    balance        = EXCLUDED.balance,
-    free_margin    = EXCLUDED.free_margin,
-    equity         = EXCLUDED.equity,
-    leverage       = EXCLUDED.leverage,
-    server         = EXCLUDED.server,
-    no_swap        = EXCLUDED.no_swap,
-    last_updated   = NOW();
-");
+            // Use a transaction to ensure atomicity
+            using (var transaction = await _dbContext.Database.BeginTransactionAsync())
+            {
+                try
+                {
+                    var tradingAccount = await _dbContext.TradingAccounts.FirstOrDefaultAsync();
+
+                    if (tradingAccount != null)
+                    {
+                        // Update existing entity
+                        tradingAccount.AccountNumber = model.AccountNumber;
+                        tradingAccount.AccountName = model.AccountName;
+                        tradingAccount.Balance = model.Balance;
+                        tradingAccount.FreeMargin = model.FreeMargin;
+                        tradingAccount.Equity = model.Equity;
+                        tradingAccount.Leverage = model.Leverage;
+                        tradingAccount.Server = model.Server;
+                        tradingAccount.NoSwap = model.NoSwap;
+                        tradingAccount.LastUpdated = DateTime.UtcNow;
+                        _dbContext.TradingAccounts.Update(tradingAccount);
+                    }
+                    else
+                    {
+                        // Insert new entity
+                        var newTradingAccount = new TradingAccount
+                        {
+                            AccountNumber = model.AccountNumber,
+                            AccountName = model.AccountName,
+                            Balance = model.Balance,
+                            FreeMargin = model.FreeMargin,
+                            Equity = model.Equity,
+                            Leverage = model.Leverage,
+                            Server = model.Server,
+                            NoSwap = model.NoSwap,
+                            LastUpdated = DateTime.UtcNow,
+                        };
+                        _dbContext.TradingAccounts.Add(newTradingAccount);
+                    }
+
+                    await _dbContext.SaveChangesAsync();
+                    await transaction.CommitAsync();
+                }
+                catch (Exception)
+                {
+                    await transaction.RollbackAsync();
+                    // Optional: Log the exception
+                    throw;
+                }
+            }
 
             return RedirectToAction(nameof(EditTradingAccount));
         }
