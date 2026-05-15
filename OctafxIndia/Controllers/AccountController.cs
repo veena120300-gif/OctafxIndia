@@ -64,19 +64,28 @@ namespace OctafxIndia.Controllers
                         PhoneNumber = model.PhoneNumber
                     };
 
-                    var result = await _userManager.CreateAsync(user, model.Password);
-
-                    if (result.Succeeded)
+                    try
                     {
-                        _logger.LogInformation("User created a new account with password.");
-                        await _signInManager.SignInAsync(user, isPersistent: false);
-                        TempData["SuccessMessage"] = "Registration successful!";
-                        return RedirectToAction("Index", "Home");
+                        var result = await _userManager.CreateAsync(user, model.Password);
+
+                        if (result.Succeeded)
+                        {
+                            _logger.LogInformation("User created a new account with password.");
+                            await _signInManager.SignInAsync(user, isPersistent: false);
+                            TempData["SuccessMessage"] = "Registration successful!";
+                            return RedirectToAction("Index", "Home");
+                        }
+
+                        foreach (var error in result.Errors)
+                        {
+                            _logger.LogWarning("Registration failed for user {Email}. Error: {Error}", model.Email, error.Description);
+                            ModelState.AddModelError(string.Empty, error.Description);
+                        }
                     }
-
-                    foreach (var error in result.Errors)
+                    catch (Exception ex)
                     {
-                        ModelState.AddModelError(string.Empty, error.Description);
+                        _logger.LogError(ex, "An unexpected error occurred during registration for user {Email}.", model.Email);
+                        ModelState.AddModelError(string.Empty, "An unexpected error occurred. Please try again.");
                     }
                 }
                 else
