@@ -46,8 +46,12 @@ namespace OctafxIndia.Controllers
         [AllowAnonymous]
         public IActionResult Login(string? returnUrl = null)
         {
-            ViewData["ReturnUrl"] = returnUrl;
-            return View();
+            if (User.Identity != null && User.Identity.IsAuthenticated)
+            {
+                return Redirect("/Home/AfterLogin");
+            }
+
+            return Redirect("/");
         }
 
         // =========================
