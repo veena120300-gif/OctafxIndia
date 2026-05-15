@@ -265,8 +265,10 @@ namespace OctafxIndia.Controllers
             {
                 return Redirect("/Home/AfterLogin");
             }
-
-            return Redirect("/");
+            else
+            {
+                return Redirect("/");
+            }
         }
 
 
