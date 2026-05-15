@@ -137,13 +137,13 @@ namespace OctafxIndia.Controllers
                 TempData["ProfileError"] = "An unexpected error occurred while saving your profile.";
             }
 
-            return RedirectToAction(nameof(AfterLogin));
+            return RedirectToAction(nameof(AfterLoginAsync));
         }
 
         private IActionResult RedirectToAfterLoginWithError(IdentityResult result)
         {
             TempData["ProfileError"] = string.Join("; ", result.Errors.Select(e => e.Description));
-            return RedirectToAction(nameof(AfterLogin));
+            return RedirectToAction(nameof(AfterLoginAsync));
         }
     }
 }

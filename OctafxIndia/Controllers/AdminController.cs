@@ -42,10 +42,10 @@ namespace OctafxIndia.Controllers
             if (viewModel == null)
             {
                 // Return a view with a new (empty) view model if no trading account exists
-                return View(new EditTradingAccountViewModel());
+                return View("EditTradingAccount", new EditTradingAccountViewModel());
             }
 
-            return View(viewModel);
+            return View("EditTradingAccount", viewModel);
         }
 
         // POST: /Admin/SaveTradingAccount
@@ -55,7 +55,7 @@ namespace OctafxIndia.Controllers
         {
             if (!ModelState.IsValid)
             {
-                return View(nameof(EditTradingAccount), model);
+                return View("EditTradingAccount", model);
             }
 
             // Use a transaction to ensure atomicity
@@ -82,7 +82,7 @@ namespace OctafxIndia.Controllers
                     else
                     {
                         // Insert new entity
-                        var newTradingAccount = new TradingAccount
+                        var newTradingAccount = new OctafxIndia.Data.TradingAccount
                         {
                             AccountNumber = model.AccountNumber,
                             AccountName = model.AccountName,
@@ -108,7 +108,7 @@ namespace OctafxIndia.Controllers
                 }
             }
 
-            return RedirectToAction(nameof(EditTradingAccount));
+            return RedirectToAction(nameof(EditTradingAccountAsync));
         }
     }
 }
