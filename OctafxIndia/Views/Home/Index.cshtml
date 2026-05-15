@@ -1,5 +1,15 @@
-﻿@{
+@{
     ViewData["Title"] = "Home";
+}
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div id="success-popup" class="success-popup">
+        <div class="success-popup-content">
+            <span class="close-btn">&times;</span>
+            <p>@TempData["SuccessMessage"]</p>
+        </div>
+    </div>
 }
 
 <section class="hero-section">
@@ -263,4 +273,23 @@
         }
       });
     });
+
+    // Success popup script
+    var popup = document.getElementById("success-popup");
+    if (popup) {
+        var closeBtn = popup.querySelector(".close-btn");
+        
+        // Show the popup
+        popup.style.display = "block";
+
+        // Close functionality
+        closeBtn.onclick = function() {
+            popup.style.display = "none";
+        }
+
+        // Hide after 3 seconds
+        setTimeout(function() {
+            popup.style.display = "none";
+        }, 3000);
+    }
 </script>

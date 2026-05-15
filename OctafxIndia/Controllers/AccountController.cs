@@ -54,26 +54,34 @@ namespace OctafxIndia.Controllers
         {
             if (ModelState.IsValid)
             {
-                var user = new ApplicationUser
+                if (model.Email != null && model.Password != null)
                 {
-                    UserName = model.Email,
-                    Email = model.Email,
-                    FullName = model.FullName,
-                    PhoneNumber = model.PhoneNumber
-                };
+                    var user = new ApplicationUser
+                    {
+                        UserName = model.Email,
+                        Email = model.Email,
+                        FullName = model.FullName,
+                        PhoneNumber = model.PhoneNumber
+                    };
 
-                var result = await _userManager.CreateAsync(user, model.Password);
+                    var result = await _userManager.CreateAsync(user, model.Password);
 
-                if (result.Succeeded)
-                {
-                    _logger.LogInformation("User created a new account with password.");
-                    await _signInManager.SignInAsync(user, isPersistent: false);
-                    return RedirectToAction("Index", "Home");
+                    if (result.Succeeded)
+                    {
+                        _logger.LogInformation("User created a new account with password.");
+                        await _signInManager.SignInAsync(user, isPersistent: false);
+                        TempData["SuccessMessage"] = "Registration successful!";
+                        return RedirectToAction("Index", "Home");
+                    }
+
+                    foreach (var error in result.Errors)
+                    {
+                        ModelState.AddModelError(string.Empty, error.Description);
+                    }
                 }
-
-                foreach (var error in result.Errors)
+                else
                 {
-                    ModelState.AddModelError(string.Empty, error.Description);
+                    ModelState.AddModelError(string.Empty, "Email and password are required.");
                 }
             }
 
@@ -85,7 +93,7 @@ namespace OctafxIndia.Controllers
         [IgnoreAntiforgeryToken]
         public async Task<IActionResult> LoginFallback()
         {
-            LoginStartModel model = null;
+            LoginStartModel? model = null;
             var contentType = Request.ContentType ?? string.Empty;
 
             // Robustly detect JSON content-type
@@ -190,7 +198,7 @@ namespace OctafxIndia.Controllers
 
         public class LoginStartModel
         {
-            public string Email { get; set; }
+            public string? Email { get; set; }
         }
     }
 }

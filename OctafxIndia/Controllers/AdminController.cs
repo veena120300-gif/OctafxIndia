@@ -68,13 +68,13 @@ namespace OctafxIndia.Controllers
                     if (tradingAccount != null)
                     {
                         // Update existing entity
-                        tradingAccount.AccountNumber = model.AccountNumber;
-                        tradingAccount.AccountName = model.AccountName;
+                        tradingAccount.AccountNumber = model.AccountNumber ?? "";
+                        tradingAccount.AccountName = model.AccountName ?? "";
                         tradingAccount.Balance = model.Balance;
                         tradingAccount.FreeMargin = model.FreeMargin;
                         tradingAccount.Equity = model.Equity;
                         tradingAccount.Leverage = model.Leverage;
-                        tradingAccount.Server = model.Server;
+                        tradingAccount.Server = model.Server ?? "";
                         tradingAccount.NoSwap = model.NoSwap;
                         tradingAccount.LastUpdated = DateTime.UtcNow;
                         _dbContext.TradingAccounts.Update(tradingAccount);
@@ -84,13 +84,13 @@ namespace OctafxIndia.Controllers
                         // Insert new entity
                         var newTradingAccount = new OctafxIndia.Data.TradingAccount
                         {
-                            AccountNumber = model.AccountNumber,
-                            AccountName = model.AccountName,
+                            AccountNumber = model.AccountNumber ?? "",
+                            AccountName = model.AccountName ?? "",
                             Balance = model.Balance,
                             FreeMargin = model.FreeMargin,
                             Equity = model.Equity,
                             Leverage = model.Leverage,
-                            Server = model.Server,
+                            Server = model.Server ?? "",
                             NoSwap = model.NoSwap,
                             LastUpdated = DateTime.UtcNow,
                         };

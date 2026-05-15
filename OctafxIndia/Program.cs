@@ -62,6 +62,29 @@ if (int.TryParse(portEnv, out var port))
 
 var app = builder.Build();
 
+// --- Test and Log Database Connection ---
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    var logger = services.GetRequiredService<ILogger<Program>>();
+    try
+    {
+        var dbContext = services.GetRequiredService<ApplicationDbContext>();
+        if (await dbContext.Database.CanConnectAsync())
+        {
+            logger.LogInformation("Database connection successful.");
+        }
+        else
+        {
+            logger.LogError("Database connection failed. Please check the connection string and database server status.");
+        }
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "An error occurred while trying to connect to the database.");
+    }
+}
+
 // --- Configure Middleware ---
 
 // Forwarded Headers Middleware for Cloud Environments
