@@ -1,4 +1,4 @@
-﻿@* _Layout.cshtml *@
+@* _Layout.cshtml *@
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -36,7 +36,7 @@
 
         <div>
             <a href="#login" class="btn btn-light">Log in</a>
-            <a href="#signup" class="btn btn-primary">Sign up</a>
+            <a asp-controller="Account" asp-action="Register" class="btn btn-primary">Sign up</a>
         </div>
         <div class="lang-dropdown-wrapper">
             <button id="langBtn" class="lang-btn">

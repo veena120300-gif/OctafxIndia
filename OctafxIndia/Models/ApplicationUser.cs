@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Microsoft.AspNetCore.Identity;
 
 namespace OctafxIndia.Models
@@ -10,5 +10,6 @@ namespace OctafxIndia.Models
         public string Country { get; set; }
         public string VerificationStatus { get; set; }
         public string Nickname { get; set; }
+        public string PhoneNumber { get; set; }
     }
 }
