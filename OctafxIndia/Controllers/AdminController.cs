@@ -22,7 +22,7 @@ namespace OctafxIndia.Controllers
 
         // GET: /Admin/EditTradingAccount
         [HttpGet]
-        public async Task<IActionResult> EditTradingAccountAsync()
+        public async Task<IActionResult> EditTradingAccount()
         {
             var viewModel = await _dbContext.TradingAccounts
                 .OrderByDescending(acc => acc.LastUpdated)
@@ -51,7 +51,7 @@ namespace OctafxIndia.Controllers
         // POST: /Admin/SaveTradingAccount
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> SaveTradingAccountAsync(EditTradingAccountViewModel model)
+        public async Task<IActionResult> SaveTradingAccount(EditTradingAccountViewModel model)
         {
             if (!ModelState.IsValid)
             {
@@ -108,7 +108,7 @@ namespace OctafxIndia.Controllers
                 }
             }
 
-            return RedirectToAction(nameof(EditTradingAccountAsync));
+            return RedirectToAction("EditTradingAccount");
         }
     }
 }

@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using OctafxIndia.Data;
 using OctafxIndia.Models;
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -23,7 +24,7 @@ namespace OctafxIndia.Controllers
 
         // GET: /AdminUserAccounts
         [HttpGet]
-        public async Task<IActionResult> IndexAsync()
+        public async Task<IActionResult> Index()
         {
             var userTradingAccounts = await _dbContext.UserTradingAccounts
                                                  .OrderBy(acc => acc.Id)
@@ -48,7 +49,7 @@ namespace OctafxIndia.Controllers
 
         // GET: /AdminUserAccounts/Edit/5
         [HttpGet]
-        public async Task<IActionResult> EditAsync(int id)
+        public async Task<IActionResult> Edit(int id)
         {
             var userTradingAccount = await _dbContext.UserTradingAccounts.FindAsync(id);
             if (userTradingAccount == null)
@@ -61,7 +62,7 @@ namespace OctafxIndia.Controllers
         // POST: /AdminUserAccounts/CreateEdit
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> CreateEditAsync(UserTradingAccount model)
+        public async Task<IActionResult> CreateEdit(UserTradingAccount model)
         {
             if (!ModelState.IsValid)
             {
@@ -105,13 +106,13 @@ namespace OctafxIndia.Controllers
                 return View("CreateEdit", model);
             }
 
-            return RedirectToAction(nameof(Index));
+            return RedirectToAction("Index");
         }
 
         // POST: /AdminUserAccounts/Delete/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteAsync(int id)
+        public async Task<IActionResult> Delete(int id)
         {
             var userTradingAccount = await _dbContext.UserTradingAccounts.FindAsync(id);
             if (userTradingAccount == null)
@@ -132,7 +133,10 @@ namespace OctafxIndia.Controllers
                 TempData["Error"] = "A database error occurred while deleting the account.";
             }
 
-            return RedirectToAction(nameof(Index));
+
+            return RedirectToAction("Index");
+
+
         }
     }
 }
